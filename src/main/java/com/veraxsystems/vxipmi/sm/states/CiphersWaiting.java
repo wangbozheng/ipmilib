@@ -60,7 +60,7 @@ public class CiphersWaiting extends State {
 	public void doTransition(StateMachine stateMachine,
 			StateMachineEvent machineEvent) {
 		if (machineEvent instanceof Timeout) {
-			stateMachine.setCurrent(new Uninitialized());
+			//stateMachine.setCurrent(new Uninitialized());
 		} else if (machineEvent instanceof GetChannelCipherSuitesPending) {
 			GetChannelCipherSuitesPending event = (GetChannelCipherSuitesPending) machineEvent;
 			GetChannelCipherSuites cipherSuites = new GetChannelCipherSuites(

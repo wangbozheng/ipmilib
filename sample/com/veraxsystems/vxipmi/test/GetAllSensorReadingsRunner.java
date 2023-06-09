@@ -7,6 +7,9 @@ import com.veraxsystems.vxipmi.api.async.ConnectionHandle;
 import com.veraxsystems.vxipmi.api.sync.IpmiConnector;
 import com.veraxsystems.vxipmi.coding.commands.IpmiVersion;
 import com.veraxsystems.vxipmi.coding.commands.PrivilegeLevel;
+import com.veraxsystems.vxipmi.coding.commands.ResponseData;
+import com.veraxsystems.vxipmi.coding.commands.chassis.ChassisControl;
+import com.veraxsystems.vxipmi.coding.commands.chassis.PowerCommand;
 import com.veraxsystems.vxipmi.coding.commands.sdr.GetSdr;
 import com.veraxsystems.vxipmi.coding.commands.sdr.GetSdrResponseData;
 import com.veraxsystems.vxipmi.coding.commands.sdr.GetSensorReading;
@@ -18,12 +21,14 @@ import com.veraxsystems.vxipmi.coding.commands.sdr.record.FullSensorRecord;
 import com.veraxsystems.vxipmi.coding.commands.sdr.record.RateUnit;
 import com.veraxsystems.vxipmi.coding.commands.sdr.record.ReadingType;
 import com.veraxsystems.vxipmi.coding.commands.sdr.record.SensorRecord;
+import com.veraxsystems.vxipmi.coding.commands.session.GetChannelCipherSuites;
 import com.veraxsystems.vxipmi.coding.payload.CompletionCode;
 import com.veraxsystems.vxipmi.coding.payload.lan.IPMIException;
 import com.veraxsystems.vxipmi.coding.protocol.AuthenticationType;
 import com.veraxsystems.vxipmi.coding.security.CipherSuite;
 import com.veraxsystems.vxipmi.common.PropertiesManager;
 import com.veraxsystems.vxipmi.common.TypeConverter;
+import com.veraxsystems.vxipmi.connection.Connection;
 
 public class GetAllSensorReadingsRunner {
 
@@ -34,11 +39,11 @@ public class GetAllSensorReadingsRunner {
      */
     private static final int MAX_REPO_RECORD_ID = 65535;
 
-    private static final String hostname = "192.168.1.1";
+    private static final String hostname = "172.18.6.182";//"127.0.0.1";
 
-    private static final String username = "user";
+    private static final String username = "root";
 
-    private static final String password = "pass";
+    private static final String password = "123456";
 
     /**
      * Size of the initial GetSdr message to get record header and size
@@ -85,17 +90,20 @@ public class GetAllSensorReadingsRunner {
         int lastReservationId = -1;
 
         // Create the connector
-        IpmiConnector connector = new IpmiConnector(0);
+        IpmiConnector connector = new IpmiConnector(54213);
 
         // start the session to the remote host. We assume, that two-key
         // authentication isn't enabled, so BMC key is left null (see
         // #startSession for details).
         ConnectionHandle handle = startSession(connector, InetAddress.getByName(hostname), username, password, "",
-                PrivilegeLevel.User);
+                PrivilegeLevel.Administrator);
 
         // Change timeout of this particular connection (default value for further connections does not change)
-        connector.setTimeout(handle, 2750);
-        
+        connector.setTimeout(handle, 5750);
+
+        ResponseData responseData =  connector
+                .sendMessage(handle, new ChassisControl(IpmiVersion.V20, handle.getCipherSuite(),AuthenticationType.RMCPPlus,PowerCommand.parseInt(0)));
+
         // We get sensor data until we encounter ID = 65535 which means that
         // this record is the last one.
         while (nextRecId < MAX_REPO_RECORD_ID) {
@@ -198,27 +206,33 @@ public class GetAllSensorReadingsRunner {
         // Create the handle to the connection which will be it's identifier
         ConnectionHandle handle = connector.createConnection(address);
 
-        CipherSuite cs;
+        CipherSuite cs =  new CipherSuite((byte)0,(byte)1,(byte)1,(byte)1);
+        //CipherSuite cs = new CipherSuite((byte)0,(byte)1,(byte)1,(byte)1);
 
         try {
+            connector.getChannelAuthenticationCapabilities(handle, cs, privilegeLevel);
             // Get cipher suites supported by the remote host
-            List<CipherSuite> suites = connector.getAvailableCipherSuites(handle);
 
-            if (suites.size() > 3) {
-                cs = suites.get(3);
-            } else if (suites.size() > 2) {
-                cs = suites.get(2);
-            } else if (suites.size() > 1) {
-                cs = suites.get(1);
-            } else {
-                cs = suites.get(0);
-            }
             // Pick the cipher suite and requested privilege level for the
             // session
-            connector.getChannelAuthenticationCapabilities(handle, cs, privilegeLevel);
+
+
 
             // Open the session and authenticate
             connector.openSession(handle, username, password, bmcKey.getBytes());
+
+//            List<CipherSuite> suites = connector.getAvailableCipherSuites(handle);
+//            //Connection connection = connector
+//            if (suites.size() > 3) {
+//                cs = suites.get(3);
+//            } else if (suites.size() > 2) {
+//                cs = suites.get(2);
+//            } else if (suites.size() > 1) {
+//                cs = suites.get(1);
+//            } else {
+//                cs = suites.get(0);
+//            }
+//            handle.setCipherSuite(cs);
         } catch (Exception e) {
             connector.closeConnection(handle);
             throw e;

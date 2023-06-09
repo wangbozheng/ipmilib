@@ -15,6 +15,7 @@ import com.veraxsystems.vxipmi.coding.rmcp.RmcpDecoder;
 import com.veraxsystems.vxipmi.common.Constants;
 import com.veraxsystems.vxipmi.sm.actions.StateMachineAction;
 import com.veraxsystems.vxipmi.sm.events.StateMachineEvent;
+import com.veraxsystems.vxipmi.sm.states.Ciphers;
 import com.veraxsystems.vxipmi.sm.states.SessionValid;
 import com.veraxsystems.vxipmi.sm.states.State;
 import com.veraxsystems.vxipmi.sm.states.Uninitialized;
@@ -108,7 +109,8 @@ public class StateMachine implements UdpListener {
 	public void start(InetAddress address) {
 		messenger.register(this);
 		remoteMachineAddress = address;
-		setCurrent(new Uninitialized());
+		//setCurrent(new Uninitialized());
+		setCurrent(new Ciphers());
 		initialized = true;
 	}
 

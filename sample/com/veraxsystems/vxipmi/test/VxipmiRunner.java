@@ -42,7 +42,7 @@ public class VxipmiRunner {
 		// (target IP address isn't enough, since we can handle multiple
 		// connections to the same host)
 		ConnectionHandle handle = connector.createConnection(InetAddress
-				.getByName("192.168.1.1"));
+				.getByName("172.18.6.182"));
 		System.out.println("Connection created");
 
 		// Get available cipher suites list via getAvailableCipherSuites and
@@ -59,7 +59,7 @@ public class VxipmiRunner {
 		// Start the session, provide username and password, and optionally the
 		// BMC key (only if the remote host has two-key authentication enabled,
 		// otherwise this parameter should be null)
-		connector.openSession(handle, "user", "pass", null);
+		connector.openSession(handle, "root", "123456", null);
 		System.out.println("Session open");
 
 		// Send some message and read the response

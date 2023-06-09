@@ -37,7 +37,7 @@ public class ChassisControlRunner {
         // Create the connector, specify port that will be used to communicate
         // with the remote host. The UDP layer starts listening at this port, so
         // no 2 connectors can work at the same time on the same port.
-        connector = new IpmiConnector(6000);
+        connector = new IpmiConnector(623);
         System.out.println("Connector created");
 
         // Create the connection and get the handle, specify IP address of the
@@ -45,7 +45,7 @@ public class ChassisControlRunner {
         // the handle will be needed to identify it among other connections
         // (target IP address isn't enough, since we can handle multiple
         // connections to the same host)
-        ConnectionHandle handle = connector.createConnection(InetAddress.getByName("192.168.1.1"));
+        ConnectionHandle handle = connector.createConnection(InetAddress.getByName("172.18.6.182"));
         System.out.println("Connection created");
 
         // Get available cipher suites list via getAvailableCipherSuites and
@@ -61,7 +61,7 @@ public class ChassisControlRunner {
         // Start the session, provide username and password, and optionally the
         // BMC key (only if the remote host has two-key authentication enabled,
         // otherwise this parameter should be null)
-        connector.openSession(handle, "user", "pass", null);
+        connector.openSession(handle, "root", "123456", null);
         System.out.println("Session open");
 
         // Send some message and read the response

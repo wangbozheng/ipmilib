@@ -28,10 +28,7 @@ import com.veraxsystems.vxipmi.sm.StateMachine;
 import com.veraxsystems.vxipmi.sm.actions.*;
 import com.veraxsystems.vxipmi.sm.events.*;
 import com.veraxsystems.vxipmi.sm.events.CloseSession;
-import com.veraxsystems.vxipmi.sm.states.Authcap;
-import com.veraxsystems.vxipmi.sm.states.Ciphers;
-import com.veraxsystems.vxipmi.sm.states.SessionValid;
-import com.veraxsystems.vxipmi.sm.states.Uninitialized;
+import com.veraxsystems.vxipmi.sm.states.*;
 import com.veraxsystems.vxipmi.transport.Messenger;
 import org.apache.log4j.Logger;
 
@@ -187,15 +184,16 @@ public class Connection implements Runnable, MachineObserver {
 	 */
 	public List<CipherSuite> getAvailableCipherSuites(int tag) throws Exception {
 
-		if (!(stateMachine.getCurrent().getClass() == Uninitialized.class)) {
-			throw new ConnectionException("Illegal connection state: "
-					+ stateMachine.getCurrent().getClass().getSimpleName());
-		}
+//		if (!(stateMachine.getCurrent().getClass() == Authcap.class)) {
+//			throw new ConnectionException("Illegal connection state: "
+//					+ stateMachine.getCurrent().getClass().getSimpleName());
+//		}
 
 		boolean process = true;
 
 		ArrayList<byte[]> rawCipherSuites = new ArrayList<byte[]>();
-
+		State cu =  stateMachine.getCurrent();
+		stateMachine.setCurrent(new ChannelCipherSuites());
 		while (process) {
 
 			lastAction = null;
@@ -208,6 +206,7 @@ public class Connection implements Runnable, MachineObserver {
 
 			if (!(action.getIpmiResponseData() instanceof GetChannelCipherSuitesResponseData)) {
 				stateMachine.doTransition(new Timeout());
+				stateMachine.setCurrent(cu);
 				throw new ConnectionException(
 						"Response data not matching Get Channel Cipher Suites command.");
 			}
@@ -238,7 +237,7 @@ public class Connection implements Runnable, MachineObserver {
 			System.arraycopy(partial, 0, csRaw, index, partial.length);
 			index += partial.length;
 		}
-
+		stateMachine.setCurrent(cu);
 		return CipherSuite.getCipherSuites(csRaw);
 	}
 
